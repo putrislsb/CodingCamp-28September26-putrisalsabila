@@ -1,0 +1,413 @@
+# Implementation Plan: Expense & Budget Visualizer
+
+## Overview
+
+This plan breaks the full implementation into 21 sequential phases, covering project setup, HTML structure, CSS styling, responsive layout, JavaScript data model, local storage, form validation, transaction management, chart rendering, custom categories, monthly summary, sorting, spending limit, dark/light mode, integration, testing, cleanup, and GitHub Pages deployment.
+
+## Tasks
+
+- [ ] 1. Project Setup
+  - [ ] 1.1 Create the project directory structure
+    - Create the following folders inside the project root: `css/` and `js/`
+    - Verify both folders exist before moving on
+    - _Requirements: NFR7 (file structure)_
+  - [ ] 1.2 Create the three application files
+    - Create the following empty files: `index.html`, `css/style.css`, `js/script.js`
+    - Do not add any content yet. Just ensure the files exist
+    - _Requirements: NFR7_
+  - [ ] 1.3 Add HTML boilerplate and Chart.js CDN link
+    - In `index.html`, add the HTML boilerplate: `<!DOCTYPE html>`, `<html lang="en">`, `<head>` with `<meta charset="UTF-8">`, `<meta name="viewport" content="width=device-width, initial-scale=1.0">`, and `<title>Expense & Budget Visualizer</title>`
+    - Add a `<link>` tag referencing `css/style.css`
+    - Add a `<script>` tag loading Chart.js from the CDN: `https://cdn.jsdelivr.net/npm/chart.js`
+    - Add a `<script src="js/script.js" defer></script>` tag
+    - Add an empty `<body>`
+    - _Requirements: NFR7_
+
+- [ ] 2. HTML Structure
+  - [ ] 2.1 Add the page header
+    - Inside `<body>`, add a `<header>` element containing an `<h1>` with the text "Expense & Budget Visualizer"
+    - Add a `<button id="theme-toggle">` with initial text "🌙 Dark Mode"
+    - _Requirements: R10 (theme toggle)_
+  - [ ] 2.2 Add the summary bar section
+    - After the header, add `<section id="summary-bar">` containing a `<div id="total-display">` with a `<p>` label "Total Spending" and a `<p id="total-amount">` showing "Rp 0"
+    - Add a `<div id="limit-container">` with `<label for="spending-limit-input">`, `<input type="number" id="spending-limit-input" placeholder="Enter limit" min="1">`, `<button id="set-limit-btn">` with text "Set Limit", and `<span id="limit-error" class="error-message" hidden></span>`
+    - Add a `<p id="limit-warning" hidden></p>`
+    - _Requirements: R3, R9_
+  - [ ] 2.3 Add the input form section
+    - Add `<section id="form-section">` containing a `<form id="transaction-form">` with form groups for item name, amount, and category
+    - Each form group includes a label, input/select, and an error span with `hidden` attribute
+    - Add `<div id="custom-category-group">` with label, input, "Add Category" button, and error span
+    - Add `<button type="submit" id="add-transaction-btn">Add Transaction</button>`
+    - The `#category` select should include a default placeholder option and three default options: Food, Transport, Fun
+    - _Requirements: R1, R6_
+  - [ ] 2.4 Add the controls section
+    - Add `<section id="controls-section">` containing a `<div id="sort-controls">` with label and `<select id="sort-select">` with options: Default, Amount Low to High, Amount High to Low, Category A–Z
+    - Add `<button id="toggle-monthly-btn">Show Monthly Summary</button>`
+    - _Requirements: R7, R8_
+  - [ ] 2.5 Add the transaction list section
+    - Add `<section id="list-section">` containing `<h2>Transactions</h2>`, `<ul id="transaction-list"></ul>`, and `<p id="empty-state">No transactions yet. Add one above!</p>`
+    - _Requirements: R2_
+  - [ ] 2.6 Add the chart section
+    - Add `<section id="chart-section">` containing `<h2>Spending by Category</h2>` and `<div id="chart-wrapper">` with `<canvas id="expense-chart"></canvas>` and `<p id="chart-empty-state">Add transactions to see the chart.</p>`
+    - _Requirements: R4_
+  - [ ] 2.7 Add the monthly summary section
+    - Add `<section id="monthly-summary-section" hidden>` containing `<h2>Monthly Summary</h2>`, `<ul id="monthly-summary-list"></ul>`, and `<p id="monthly-empty-state">No transactions to summarize.</p>`
+    - _Requirements: R7_
+
+- [ ] 3. CSS Base Styling
+  - [ ] 3.1 Define CSS custom properties (design tokens)
+    - At the top of `style.css`, define `:root` with custom properties: `--color-bg`, `--color-surface`, `--color-text`, `--color-text-muted`, `--color-primary`, `--color-primary-hover`, `--color-danger`, `--color-danger-hover`, `--color-warning`, `--color-border`, `--color-input-bg`, `--font-base`, `--font-size-base`, `--radius`, `--shadow`
+    - Set light mode values for all variables
+    - _Requirements: NFR5, R10_
+  - [ ] 3.2 Add CSS reset and base styles
+    - Add `*, *::before, *::after { box-sizing: border-box; }`
+    - Reset `margin` and `padding` on `body`
+    - Set `font-family`, `font-size`, `line-height`, `color`, and `background-color` on `body` using custom properties
+    - _Requirements: NFR5_
+  - [ ] 3.3 Style the header
+    - Style `<header>` with full-width background using `--color-primary`, white text, padding, and flex layout to space title and theme toggle
+    - Style `#theme-toggle` as a small button with appropriate padding and border
+    - _Requirements: NFR5_
+  - [ ] 3.4 Style the summary bar
+    - Style `#summary-bar` with card appearance using `--color-surface`, padding, border-radius, and box-shadow
+    - `#total-amount` uses a large bold font size
+    - `#limit-container` uses flex layout; `#limit-warning` uses `--color-warning` background and includes a text symbol for non-color indication
+    - _Requirements: NFR5, R3, R9_
+  - [ ] 3.5 Style the input form
+    - Style `#form-section` and `<form>` with card appearance
+    - `.form-group` has `margin-bottom` for spacing; labels are block elements; inputs and selects are full-width with padding, border, and border-radius using custom properties
+    - Submit button uses `--color-primary`, white text, full width, cursor pointer; `.error-message` uses `--color-danger` with small font size
+    - _Requirements: NFR5, R1_
+  - [ ] 3.6 Style the controls section
+    - Style `#controls-section` with flex layout, row direction, gap between items
+    - Sort select has consistent input styling; `#toggle-monthly-btn` styled as a secondary button
+    - _Requirements: NFR5_
+  - [ ] 3.7 Style the transaction list
+    - Style `#list-section` with card appearance; `#transaction-list` has `list-style: none`, padding zero
+    - Each `<li>` uses flex layout with item name left, amount/category middle, delete button right
+    - Delete button uses `--color-danger`, white text, small size; `#empty-state` is centered with muted color
+    - _Requirements: NFR5, R2_
+  - [ ] 3.8 Style the chart section
+    - Style `#chart-section` with card appearance
+    - `#chart-wrapper` constrains canvas with `max-width` and `margin: auto`; `#chart-empty-state` is centered with muted text
+    - _Requirements: NFR5, R4_
+  - [ ] 3.9 Style the monthly summary section
+    - Style `#monthly-summary-section` with card appearance
+    - Each `<li>` in `#monthly-summary-list` shows month label left and total right using flex layout
+    - `#monthly-empty-state` is centered with muted text
+    - _Requirements: NFR5, R7_
+  - [ ] 3.10 Add utility and state classes
+    - Add `.hidden` with `display: none`
+    - Add `.over-limit` for color changes on `#total-amount` when spending exceeds limit (use `--color-danger` and note that JS will add a text indicator)
+    - `.error-message` defaults to `display: none` and is shown by removing the `hidden` attribute in JS
+    - _Requirements: NFR5, R9_
+
+- [ ] 4. Responsive Layout
+  - [ ] 4.1 Ensure mobile base layout works
+    - Verify all sections stack vertically, all inputs and buttons are full-width, no horizontal scrolling on 320px wide screen, and touch target sizes for buttons are at least 44px height
+    - _Requirements: NFR5_
+  - [ ] 4.2 Add tablet breakpoint (min-width: 600px)
+    - At `@media (min-width: 600px)`: form inputs can use a two-column grid inside `.form-group` containers, controls section items remain in a single row with wrapping, chart section can use a constrained max-width
+    - _Requirements: NFR5_
+  - [ ] 4.3 Add desktop breakpoint (min-width: 960px)
+    - At `@media (min-width: 960px)`: main content uses CSS Grid or Flexbox with two columns (left: form and controls; right: transaction list and chart)
+    - Transaction list has `max-height: 400px` and `overflow-y: auto`; monthly summary spans full width below
+    - _Requirements: NFR5_
+
+- [ ] 5. Transaction Data Model
+  - [ ] 5.1 Define constants and default state
+    - At the top of `script.js`, define `const STORAGE_KEYS` with keys: `TRANSACTIONS`, `CATEGORIES`, `SPENDING_LIMIT`, `THEME`
+    - Define `const DEFAULT_CATEGORIES = ['Food', 'Transport', 'Fun']`
+    - _Requirements: R5_
+  - [ ] 5.2 Define application state variables
+    - Declare: `let transactions = []`, `let categories = [...DEFAULT_CATEGORIES]`, `let currentSort = 'none'`, `let spendingLimit = null`, `let theme = 'light'`, `let chartInstance = null`
+    - _Requirements: R5_
+  - [ ] 5.3 Implement the ID generator
+    - Write `generateId()` that returns `'tx_' + Date.now() + '_' + Math.floor(Math.random() * 10000)`
+    - Verify it returns a unique string each time it is called
+    - _Requirements: R1, R5_
+  - [ ] 5.4 Implement the currency formatter
+    - Write `formatCurrency(amount)` that returns a readable string like `"Rp 25,000"` using `amount.toLocaleString('id-ID')` or a simple manual formatter
+    - This function will be used throughout the app
+    - _Requirements: R3_
+
+- [ ] 6. Local Storage
+  - [ ] 6.1 Implement loadFromStorage()
+    - Read `expense_transactions` from LS, parse JSON, validate it is an array, fall back to `[]` on error
+    - Read `expense_categories` from LS, parse JSON, merge with `DEFAULT_CATEGORIES`, fall back to `DEFAULT_CATEGORIES` on error
+    - Read `expense_spending_limit` from LS, parse as float, fall back to `null` if missing or NaN
+    - Read `expense_theme` from LS, validate it is `"light"` or `"dark"`, fall back to `"light"`
+    - Use try/catch around every JSON.parse call
+    - _Requirements: R5_
+  - [ ] 6.2 Implement save helper functions
+    - Write `saveTransactions()`, `saveCategories()`, `saveSpendingLimit()` (removes key if null), and `saveTheme()`
+    - Each saves the corresponding state variable to localStorage using `STORAGE_KEYS`
+    - _Requirements: R5_
+  - [ ] 6.3 Test Local Storage in isolation
+    - Manually test: `loadFromStorage()` with no LS data returns defaults, `saveTransactions()` then reload restores data, `loadFromStorage()` with broken JSON falls back without throwing
+    - _Requirements: R5_
+
+- [ ] 7. Input Form and Validation
+  - [ ] 7.1 Implement showFieldError() and clearAllErrors()
+    - Write `showFieldError(errorElementId, message)` that finds the error span by ID, sets textContent, and removes the `hidden` attribute
+    - Write `clearAllErrors()` that finds all `.error-message` spans, clears their text, and adds `hidden` attribute back to all
+    - _Requirements: R1_
+  - [ ] 7.2 Implement validateForm()
+    - Write `validateForm(itemName, amount, category)` that returns `true` only if all validations pass
+    - Check: itemName is not empty/whitespace, amount is not empty, amount parses to a valid number, amount > 0, category is not empty string
+    - Call `showFieldError` for each failed field; return `false` if any check fails (multiple errors can show at once)
+    - _Requirements: R1_
+  - [ ] 7.3 Implement handleFormSubmit()
+    - Write `handleFormSubmit(event)` that calls `event.preventDefault()`, calls `clearAllErrors()`, reads trimmed values from `#item-name`, `#amount`, `#category`, calls `validateForm()`, and stops if it returns false
+    - If valid: calls `addTransaction()`, then resets the form with `form.reset()`
+    - _Requirements: R1_
+  - [ ] 7.4 Bind form submit event
+    - Add: `document.getElementById('transaction-form').addEventListener('submit', handleFormSubmit);`
+    - _Requirements: R1_
+  - [ ] 7.5 Test form validation manually
+    - Verify: submitting empty form shows three error messages, entering "abc" in amount shows error, entering "-5" shows error, entering "0" shows error, entering valid form clears all errors
+    - _Requirements: R1_
+
+- [ ] 8. Add Transactions
+  - [ ] 8.1 Implement addTransaction()
+    - Write `addTransaction(itemName, amount, category)` that creates a transaction object `{ id: generateId(), itemName, amount, category, date: new Date().toISOString() }`, pushes it to `transactions[]`, and calls `saveTransactions()`
+    - _Requirements: R1, R5_
+  - [ ] 8.2 Wire up addTransaction() to form submission
+    - In `handleFormSubmit()`, after validation passes, call `addTransaction(itemName.trim(), parseFloat(amount), category)`
+    - Then call the full render cycle: `renderTransactionList()`, `renderTotalBalance()`, `renderChart()`, `renderMonthlySummary()`, `renderSpendingLimitIndicator()`
+    - _Requirements: R1, R2, R3, R4_
+  - [ ] 8.3 Test adding a transaction
+    - Open the browser, fill in the form with valid data and submit
+    - Verify: form resets after submission, `transactions[]` contains the new item, Local Storage contains the new item
+    - _Requirements: R1, R5_
+
+- [ ] 9. Transaction List Rendering
+  - [ ] 9.1 Implement getSortedTransactions()
+    - Write `getSortedTransactions()` that creates a shallow copy of `transactions[]` with `[...transactions]`, applies sorting based on `currentSort` value, and returns the sorted copy without mutating the original
+    - _Requirements: R2, R8_
+  - [ ] 9.2 Implement renderTransactionList()
+    - Write `renderTransactionList()` that calls `getSortedTransactions()`, shows/hides `#empty-state` based on array length, clears `#transaction-list` innerHTML, and for each transaction creates a `<li>` with item name span, amount span (using `formatCurrency`), category span, and a delete `<button>` with `data-id` and `aria-label`
+    - _Requirements: R2_
+  - [ ] 9.3 Test transaction list rendering
+    - Verify: all added transactions appear in the list with correct name, amount, and category; empty state disappears on first add; all transactions are restored after page reload
+    - _Requirements: R2, R5_
+
+- [ ] 10. Delete Transactions
+  - [ ] 10.1 Implement deleteTransaction()
+    - Write `deleteTransaction(id)` that filters `transactions[]` to remove the matching id: `transactions = transactions.filter(tx => tx.id !== id)`, then calls `saveTransactions()`
+    - _Requirements: R2, R5_
+  - [ ] 10.2 Add event delegation for delete buttons
+    - Add one listener on `#transaction-list` using `event.target.closest('[data-id]')` to detect delete button clicks
+    - On click: call `deleteTransaction(btn.dataset.id)` then call the full render cycle
+    - _Requirements: R2_
+  - [ ] 10.3 Test deletion
+    - Verify: clicking Delete removes the transaction immediately, deleting the last transaction shows the empty state, Local Storage is updated after deletion, deleted transaction is gone after reload
+    - _Requirements: R2, R5_
+
+- [ ] 11. Total Balance
+  - [ ] 11.1 Implement renderTotalBalance()
+    - Write `renderTotalBalance()` that calculates total using `transactions.reduce((sum, tx) => sum + tx.amount, 0)` and updates `#total-amount` textContent with `formatCurrency(total)`
+    - _Requirements: R3_
+  - [ ] 11.2 Ensure renderTotalBalance() is called in all update paths
+    - Confirm `renderTotalBalance()` is called after `addTransaction()`, after `deleteTransaction()`, and in `init()` after loading from Local Storage
+    - _Requirements: R3_
+  - [ ] 11.3 Test total balance
+    - Verify: total is 0 on first load, increases correctly after adding, decreases correctly after deleting, and is correctly restored after page refresh
+    - _Requirements: R3_
+
+- [ ] 12. Pie Chart
+  - [ ] 12.1 Implement getCategoryTotals()
+    - Write `getCategoryTotals()` that iterates over `transactions[]`, accumulates total amounts per category name into a plain object, and returns it (e.g., `{ Food: 50000, Transport: 20000 }`)
+    - _Requirements: R4_
+  - [ ] 12.2 Define chart color palette
+    - Define `const CHART_COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#f97316']` at the top of `script.js`
+    - Add more colors if needed for additional custom categories
+    - _Requirements: R4_
+  - [ ] 12.3 Implement renderChart()
+    - Write `renderChart()` that calls `getCategoryTotals()`, hides/shows chart vs empty state based on whether transactions exist
+    - Builds `labels[]` and `data[]` arrays from category totals; assigns colors from `CHART_COLORS` by index
+    - If `chartInstance` is null: creates a new `Chart` on `#expense-chart` with type `'pie'`; if it exists: updates data and calls `chartInstance.update()`
+    - _Requirements: R4_
+  - [ ] 12.4 Test pie chart
+    - Verify: chart appears after first transaction, segments update on add, empties gracefully when all deleted, and is correct after page reload
+    - _Requirements: R4_
+
+- [ ] 13. Custom Categories
+  - [ ] 13.1 Implement renderCategoryOptions()
+    - Write `renderCategoryOptions()` that clears the `#category` select, adds the default placeholder option first, then iterates over `categories[]` and appends one `<option>` per category
+    - _Requirements: R6_
+  - [ ] 13.2 Implement validateCategoryName()
+    - Write `validateCategoryName(name)` that returns false if name is empty/whitespace, returns false if name already exists in `categories[]` (case-insensitive), and returns true otherwise
+    - _Requirements: R6_
+  - [ ] 13.3 Implement handleAddCategory()
+    - Write `handleAddCategory()` that reads and trims `#custom-category-input`, calls `validateCategoryName()`, shows error in `#custom-category-error` if invalid, otherwise pushes to `categories[]`, calls `saveCategories()`, calls `renderCategoryOptions()`, and clears the input field
+    - _Requirements: R6_
+  - [ ] 13.4 Bind the Add Category button
+    - Add: `document.getElementById('add-category-btn').addEventListener('click', handleAddCategory);`
+    - _Requirements: R6_
+  - [ ] 13.5 Update init() to load and render categories
+    - In `init()`, after `loadFromStorage()`: ensure `categories[]` always starts with the three defaults, merge any saved custom categories from LS that are not already in the array, call `renderCategoryOptions()`
+    - _Requirements: R6_
+  - [ ] 13.6 Test custom categories
+    - Verify: custom category appears in the dropdown after being added, transactions can use it, custom categories persist after refresh, default categories are always present, adding duplicate or empty name shows an error
+    - _Requirements: R6_
+
+- [ ] 14. Monthly Summary
+  - [ ] 14.1 Confirm date field in addTransaction()
+    - Ensure `addTransaction()` includes `date: new Date().toISOString()` in the transaction object (should already be done in Phase 8, confirm here)
+    - _Requirements: R7_
+  - [ ] 14.2 Implement groupByMonth()
+    - Write `groupByMonth(txArray)` that groups transactions by `"YYYY-MM"` key derived from `new Date(tx.date)` and returns an object like `{ "2026-10": 75000, "2026-09": 40000 }`
+    - _Requirements: R7_
+  - [ ] 14.3 Implement formatMonthLabel()
+    - Write `formatMonthLabel(yearMonth)` that splits the `"YYYY-MM"` string, creates a `Date` for the first day of that month, and returns a formatted string like `"October 2026"` using `toLocaleString`
+    - _Requirements: R7_
+  - [ ] 14.4 Implement renderMonthlySummary()
+    - Write `renderMonthlySummary()` that calls `groupByMonth(transactions)`, shows/hides `#monthly-empty-state` based on data, sorts month keys descending, and for each month creates a `<li>` with label left and formatted total right
+    - _Requirements: R7_
+  - [ ] 14.5 Wire up the monthly summary toggle
+    - Add click listener on `#toggle-monthly-btn` that toggles `section.hidden`, updates button text to "Hide Monthly Summary" / "Show Monthly Summary", and calls `renderMonthlySummary()` when opening
+    - Also call `renderMonthlySummary()` in the main render cycle so it stays up to date when visible
+    - _Requirements: R7_
+  - [ ] 14.6 Test monthly summary
+    - Verify: summary is hidden by default, toggle button shows/hides it, transactions are grouped by month correctly, summary updates on add/delete, shows empty state when no transactions exist
+    - _Requirements: R7_
+
+- [ ] 15. Transaction Sorting
+  - [ ] 15.1 Confirm getSortedTransactions() is complete
+    - Verify the function from Phase 9 handles all four sort values: `'none'` (original order), `'amount-asc'` (lowest to highest), `'amount-desc'` (highest to lowest), `'category'` (alphabetical using `localeCompare`)
+    - _Requirements: R8_
+  - [ ] 15.2 Bind the sort dropdown change event
+    - Add: `document.getElementById('sort-select').addEventListener('change', function() { currentSort = this.value; renderTransactionList(); });`
+    - _Requirements: R8_
+  - [ ] 15.3 Test sorting
+    - Verify: changing sort option re-renders list in correct order, deleting from sorted list works correctly, total balance is unaffected, LS transaction order is unaffected, single transaction has no error
+    - _Requirements: R8_
+
+- [ ] 16. Spending Limit
+  - [ ] 16.1 Implement handleSetSpendingLimit()
+    - Write `handleSetSpendingLimit()` that reads and parses `#spending-limit-input` as float, validates it is a valid number greater than 0 (shows error in `#limit-error` if not), and if valid: sets `spendingLimit`, calls `saveSpendingLimit()`, hides `#limit-error`, calls `renderSpendingLimitIndicator()`
+    - _Requirements: R9_
+  - [ ] 16.2 Implement renderSpendingLimitIndicator()
+    - Write `renderSpendingLimitIndicator()` that calculates total, and if `spendingLimit` is not null and total >= spendingLimit: shows `#limit-warning` with text "⚠ Warning: Spending limit of [formatCurrency(spendingLimit)] reached!" and adds class `over-limit` to `#total-amount`; otherwise hides the warning and removes the class
+    - _Requirements: R9_
+  - [ ] 16.3 Bind the Set Limit button
+    - Add: `document.getElementById('set-limit-btn').addEventListener('click', handleSetSpendingLimit);`
+    - _Requirements: R9_
+  - [ ] 16.4 Restore spending limit on init()
+    - In `init()`, after loading from LS: if `spendingLimit` is not null, set the `#spending-limit-input` value to `spendingLimit` so the user sees their saved limit
+    - _Requirements: R9_
+  - [ ] 16.5 Test spending limit
+    - Verify: setting valid limit saves to LS, warning appears when total >= limit, warning disappears when total drops below limit, limit persists after refresh, zero or negative limit shows validation error
+    - _Requirements: R9_
+
+- [ ] 17. Dark/Light Mode
+  - [ ] 17.1 Add dark theme CSS variables
+    - In `style.css`, add the `[data-theme="dark"]` block that overrides all color custom properties defined in `:root`
+    - Ensure all UI elements look correct in dark mode using only variable overrides — no new selectors needed
+    - _Requirements: R10_
+  - [ ] 17.2 Implement applyTheme()
+    - Write `applyTheme(themeName)` that sets `document.documentElement.setAttribute('data-theme', themeName)` and updates `#theme-toggle` button text: `'☀ Light Mode'` for dark, `'🌙 Dark Mode'` for light
+    - _Requirements: R10_
+  - [ ] 17.3 Implement handleThemeToggle()
+    - Write `handleThemeToggle()` that toggles `theme` between `'light'` and `'dark'`, calls `applyTheme(theme)`, and calls `saveTheme()`
+    - _Requirements: R10_
+  - [ ] 17.4 Bind the theme toggle button
+    - Add: `document.getElementById('theme-toggle').addEventListener('click', handleThemeToggle);`
+    - _Requirements: R10_
+  - [ ] 17.5 Apply theme on init()
+    - In `init()`, after loading theme from LS, call `applyTheme(theme)` before any rendering to ensure correct theme is applied before the user sees the page
+    - _Requirements: R10_
+  - [ ] 17.6 Test dark/light mode
+    - Verify: clicking toggle switches themes, all UI elements remain readable in both themes, theme preference is saved and restored after refresh, no layout breaks when toggling
+    - _Requirements: R10_
+
+- [ ] 18. Integration
+  - [ ] 18.1 Implement init()
+    - Write the `init()` function that runs: `loadFromStorage()`, `applyTheme(theme)`, `renderCategoryOptions()`, `renderTransactionList()`, `renderTotalBalance()`, `renderChart()`, `renderMonthlySummary()`, `renderSpendingLimitIndicator()`, and restores the spending limit input value if set
+    - _Requirements: All_
+  - [ ] 18.2 Call init() at the bottom of script.js
+    - At the very bottom of `script.js`, after all function definitions and event listener bindings, add `init();`
+    - _Requirements: All_
+  - [ ] 18.3 Verify all event listeners are in place
+    - Confirm all listeners are bound: `#transaction-form` submit → `handleFormSubmit`, `#transaction-list` click (delegation) → delete + render, `#add-category-btn` click → `handleAddCategory`, `#sort-select` change → `currentSort` + `renderTransactionList`, `#set-limit-btn` click → `handleSetSpendingLimit`, `#toggle-monthly-btn` click → toggle visibility, `#theme-toggle` click → `handleThemeToggle`
+    - _Requirements: All_
+  - [ ] 18.4 Full end-to-end test
+    - Complete the full test sequence: open fresh app, add Food/Transport/Fun transactions, delete one, add custom category, add transaction with it, change sort, delete from sorted list, set spending limit, toggle dark mode, refresh page and verify all data/theme/limit are restored
+    - _Requirements: All_
+
+- [ ] 19. Responsive Testing
+  - [ ] 19.1 Test on mobile viewport (375px width)
+    - Using browser devtools or a real device: verify all sections are readable, no horizontal scrolling, form is touch-friendly, delete buttons are large enough to tap, transaction list scrolls when many items, chart is visible and not cropped
+    - _Requirements: NFR5_
+  - [ ] 19.2 Test on tablet viewport (768px width)
+    - Verify: layout uses more horizontal space sensibly, form and chart are not awkwardly stretched, all features remain functional
+    - _Requirements: NFR5_
+  - [ ] 19.3 Test on desktop viewport (1280px width)
+    - Verify: two-column layout is used, transaction list has fixed max-height and scrolls, chart is well-proportioned, form does not stretch to full page width unnecessarily
+    - _Requirements: NFR5_
+
+- [ ] 20. Final Cleanup
+  - [ ] 20.1 Remove all console.log statements
+    - Search `script.js` for any `console.log`, `console.warn`, or `console.error` calls used during development and remove them
+    - _Requirements: NFR6_
+  - [ ] 20.2 Review and clean up comments
+    - Remove any TODO comments that were resolved; keep only comments that explain non-obvious logic; ensure section headings in `script.js` are consistent and readable
+    - _Requirements: NFR6_
+  - [ ] 20.3 Validate HTML
+    - Check browser devtools console for any HTML parsing errors and fix any unclosed tags, missing attributes, or invalid nesting
+    - _Requirements: NFR6_
+  - [ ] 20.4 Check accessibility basics
+    - Verify: all `<input>` elements have a corresponding `<label>` connected with `for`/`id`, all buttons have meaningful text, all icons that carry meaning have text alternatives, page can be navigated with keyboard only, error messages include text (not color alone)
+    - _Requirements: NFR6_
+  - [ ] 20.5 Final code review
+    - Read through `script.js` and `style.css`: no duplicate functions, no unused variables, consistent indentation, meaningful names, no dead code
+    - _Requirements: NFR6_
+
+- [ ] 21. GitHub Pages Preparation
+  - [ ] 21.1 Verify the project works as a standalone file
+    - Ensure `index.html` is at root, `css/style.css` and `js/script.js` paths use relative paths, Chart.js CDN uses HTTPS
+    - _Requirements: NFR7_
+  - [ ] 21.2 Update README.md
+    - Update `README.md` with: project title, short description, list of implemented features, technologies used (HTML, CSS, Vanilla JavaScript, Chart.js), how to run locally, and a placeholder for the GitHub Pages deployment link
+    - _Requirements: NFR7_
+  - [ ] 21.3 Commit all files
+    - Ensure all project files are committed: `index.html`, `css/style.css`, `js/script.js`, `README.md`, and all spec files under `.kiro/specs/expense-budget-visualizer/`
+    - _Requirements: NFR7_
+  - [ ] 21.4 Enable GitHub Pages
+    - In GitHub repository settings: go to Settings → Pages, set source to `main` branch root folder, save and wait for deployment, verify the live URL works and the application loads correctly
+    - _Requirements: NFR7_
+  - [ ] 21.5 Verify the deployed application
+    - Open the GitHub Pages URL in a browser and verify: application loads without errors, Chart.js loads from CDN, Local Storage works on the deployed URL, all features function the same as local testing
+    - _Requirements: NFR7_
+
+## Notes
+
+- Tasks marked with `*` are optional and can be skipped for faster MVP
+- Each task references specific requirements for traceability
+- Checkpoints ensure incremental validation
+- Dependencies flow sequentially: each phase depends on completion of the previous phase
+- Within each phase, sub-tasks are also sequential (N.2 depends on N.1, etc.)
+
+## Task Dependency Graph
+
+- 1 → 2
+- 2 → 3
+- 3 → 4
+- 4 → 5
+- 5 → 6
+- 6 → 7
+- 7 → 8
+- 8 → 9
+- 9 → 10
+- 10 → 11
+- 11 → 12
+- 12 → 13
+- 13 → 14
+- 14 → 15
+- 15 → 16
+- 16 → 17
+- 17 → 18
+- 18 → 19
+- 19 → 20
+- 20 → 21

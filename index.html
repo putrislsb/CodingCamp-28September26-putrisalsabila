@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense &amp; Budget Visualizer</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ============================================================
+       HEADER
+  ============================================================ -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <h1 class="header-title">💰 Expense &amp; Budget Visualizer</h1>
+        <p class="header-subtitle">Track your spending and manage your daily expenses.</p>
+      </div>
+      <button id="theme-toggle" class="btn btn-theme" aria-label="Toggle dark/light mode">
+        🌙 Dark Mode
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       MAIN CONTENT
+  ============================================================ -->
+  <main class="main-container">
+
+    <!-- ── TOTAL BALANCE ── -->
+    <section class="balance-card" aria-label="Total balance">
+      <div class="balance-label">Total Balance</div>
+      <div id="total-balance" class="balance-amount">Rp 0</div>
+      <div id="limit-warning" class="limit-warning" hidden>
+        ⚠️ <span id="limit-warning-text"></span>
+      </div>
+    </section>
+
+    <!-- ── TOP ROW: FORM + SORT/CONTROLS ── -->
+    <div class="top-row">
+
+      <!-- ADD TRANSACTION FORM -->
+      <section class="card form-card" aria-label="Add transaction">
+        <h2 class="card-title">Add Transaction</h2>
+
+        <form id="transaction-form" novalidate>
+
+          <!-- Item Name -->
+          <div class="form-group">
+            <label for="item-name">Item Name</label>
+            <input
+              type="text"
+              id="item-name"
+              name="item-name"
+              placeholder="e.g. Lunch"
+              autocomplete="off"
+            />
+            <span id="item-name-error" class="field-error" role="alert" hidden></span>
+          </div>
+
+          <!-- Amount -->
+          <div class="form-group">
+            <label for="amount">Amount (Rp)</label>
+            <input
+              type="number"
+              id="amount"
+              name="amount"
+              placeholder="e.g. 25000"
+              min="1"
+              step="any"
+            />
+            <span id="amount-error" class="field-error" role="alert" hidden></span>
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+              <option value="">— Select a category —</option>
+              <option value="Food">Food</option>
+              <option value="Transport">Transport</option>
+              <option value="Fun">Fun</option>
+            </select>
+            <span id="category-error" class="field-error" role="alert" hidden></span>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full">
+            ➕ Add Transaction
+          </button>
+        </form>
+
+        <!-- ── OPTIONAL: ADD CUSTOM CATEGORY ── -->
+        <div class="custom-category-section">
+          <h3 class="section-subtitle">Add Custom Category</h3>
+          <div class="custom-category-row">
+            <input
+              type="text"
+              id="custom-category-input"
+              placeholder="e.g. Healthcare"
+              aria-label="New category name"
+            />
+            <button id="add-category-btn" class="btn btn-secondary">Add</button>
+          </div>
+          <span id="custom-category-error" class="field-error" role="alert" hidden></span>
+        </div>
+      </section>
+
+      <!-- SORT + CONTROLS -->
+      <aside class="card controls-card" aria-label="Transaction controls">
+        <h2 class="card-title">Sort &amp; Filter</h2>
+
+        <div class="form-group">
+          <label for="sort-select">Sort Transactions</label>
+          <select id="sort-select">
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="amount-asc">Amount: Low to High</option>
+            <option value="amount-desc">Amount: High to Low</option>
+          </select>
+        </div>
+
+        <!-- Spending Limit -->
+        <div class="form-group">
+          <label for="spending-limit">Spending Limit (Rp)</label>
+          <input
+            type="number"
+            id="spending-limit"
+            placeholder="e.g. 500000"
+            min="1"
+            step="any"
+            aria-label="Set spending limit"
+          />
+          <span id="limit-error" class="field-error" role="alert" hidden></span>
+        </div>
+        <button id="set-limit-btn" class="btn btn-secondary btn-full">Set Limit</button>
+
+        <!-- Monthly Summary Toggle -->
+        <button id="toggle-summary-btn" class="btn btn-outline btn-full" style="margin-top: 0.75rem;">
+          📅 Show Monthly Summary
+        </button>
+      </aside>
+    </div>
+
+    <!-- ── MONTHLY SUMMARY (hidden by default) ── -->
+    <section id="monthly-summary-section" class="card" hidden aria-label="Monthly summary">
+      <h2 class="card-title">📅 Monthly Summary</h2>
+      <ul id="monthly-summary-list" class="monthly-list"></ul>
+      <p id="monthly-empty" class="empty-text" hidden>No transactions to summarize.</p>
+    </section>
+
+    <!-- ── BOTTOM ROW: TRANSACTION LIST + PIE CHART ── -->
+    <div class="bottom-row">
+
+      <!-- TRANSACTION LIST -->
+      <section class="card list-card" aria-label="Transaction history">
+        <h2 class="card-title">Transaction History</h2>
+
+        <!-- Empty state -->
+        <div id="empty-state" class="empty-state">
+          <div class="empty-icon">📋</div>
+          <p class="empty-title">No transactions yet.</p>
+          <p class="empty-hint">Add your first expense to start tracking your spending.</p>
+        </div>
+
+        <!-- Transaction list -->
+        <ul id="transaction-list" class="transaction-list" hidden aria-label="Transactions"></ul>
+      </section>
+
+      <!-- PIE CHART -->
+      <section class="card chart-card" aria-label="Spending chart">
+        <h2 class="card-title">Spending by Category</h2>
+
+        <div id="chart-container" class="chart-container" hidden>
+          <canvas id="expense-chart" aria-label="Pie chart of spending by category" role="img"></canvas>
+        </div>
+
+        <div id="chart-empty" class="empty-state">
+          <div class="empty-icon">📊</div>
+          <p class="empty-title">No data yet.</p>
+          <p class="empty-hint">Add transactions to see the spending chart.</p>
+        </div>
+      </section>
+
+    </div>
+    <!-- end .bottom-row -->
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer class="site-footer">
+    <p>Expense &amp; Budget Visualizer — CodingCamp Assignment</p>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
